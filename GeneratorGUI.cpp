@@ -206,7 +206,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 inputFile->GetResult(&fileResult);
                 if (!SUCCEEDED(fileResult)) {
                     MessageBox(hWnd, TEXT("Невозможно открыть файл"), TEXT("Ошибка"), MB_OK | MB_ICONEXCLAMATION);
-                    inputFile->Release();
                     break;
                 }
                 fileResult->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
@@ -222,7 +221,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 CoTaskMemFree(filePath);
                 fileResult->Release();
-                inputFile->Release();
                 break;
             }
             case IDM_SEED_FROM_MOUSE:
@@ -236,7 +234,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 outputFile->GetResult(&fileResult);
                 if (!SUCCEEDED(fileResult)) {
                     MessageBox(hWnd, TEXT("Невозможно открыть файл"), TEXT("Ошибка"), MB_OK | MB_ICONEXCLAMATION);
-                    outputFile->Release();
                     break;
                 }
                 fileResult->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
@@ -260,7 +257,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 CoTaskMemFree(filePath);
                 fileResult->Release();
-                outputFile->Release();
                 break;
             }
             case IDM_EXIT:

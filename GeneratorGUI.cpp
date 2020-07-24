@@ -117,9 +117,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW (&wcex);
 }
 
-IFileDialog* inputFile = NULL;
-IFileDialog* outputFile = NULL;
-
 //
 //   ФУНКЦИЯ: InitInstance(HINSTANCE, int)
 //
@@ -146,8 +143,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     SetDlgItemInt(hWnd, IDC_EDIT2, 0, FALSE);
     SetDlgItemInt(hWnd, IDC_EDIT3, UINT32_MAX, FALSE);
     CheckMenuRadioItem(hMenu, IDM_SEED_FROM_FILE, IDM_SEED_FROM_MOUSE, IDM_SEED_FROM_NUMBER, 0);
-    CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&inputFile));
-    CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&outputFile));
     return TRUE;
 }
 
@@ -179,8 +174,6 @@ static void readSeedFromInput() {
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    IShellItem* fileResult;
-    PWSTR filePath;
     uint32_t minimum, maximum;
     double number;
     std::wostringstream wcharStream;
@@ -202,12 +195,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_PARAMETERS), hWnd, Parameters);
                 break;
             case IDM_SEED_FROM_FILE: {
+                IFileDialog* inputFile = NULL;
+                CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&inputFile));
                 inputFile->Show(NULL);
+                IShellItem* fileResult;
                 inputFile->GetResult(&fileResult);
                 if (!SUCCEEDED(fileResult)) {
                     MessageBox(hWnd, TEXT("Невозможно открыть файл"), TEXT("Ошибка"), MB_OK | MB_ICONEXCLAMATION);
+                    inputFile->Release();
                     break;
                 }
+                PWSTR filePath;
                 fileResult->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
                 if (input != NULL) {
                     fclose(input);
@@ -221,6 +219,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 CoTaskMemFree(filePath);
                 fileResult->Release();
+                inputFile->Release();
                 break;
             }
             case IDM_SEED_FROM_MOUSE:
@@ -230,12 +229,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_SEED_BY_NUMBER), hWnd, SeedFromNumber);
                 break;
             case IDC_BUTTON1: {
+                IFileDialog* outputFile = NULL;
+                CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&outputFile));
                 outputFile->Show(NULL);
+                IShellItem* fileResult;
                 outputFile->GetResult(&fileResult);
                 if (!SUCCEEDED(fileResult)) {
                     MessageBox(hWnd, TEXT("Невозможно открыть файл"), TEXT("Ошибка"), MB_OK | MB_ICONEXCLAMATION);
+                    outputFile->Release();
                     break;
                 }
+                PWSTR filePath;
                 fileResult->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
                 _bstr_t b(filePath);
                 const char* c = b;
@@ -257,6 +261,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 CoTaskMemFree(filePath);
                 fileResult->Release();
+                outputFile->Release();
                 break;
             }
             case IDM_EXIT:

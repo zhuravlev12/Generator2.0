@@ -133,9 +133,7 @@ void setAdditionalRandom(unsigned char (*random)()) {
 void mySRandFromStates(uint32_t paramsLength, MyRegisterState ** states) {
 	if (registers != NULL) {
 		for (uint32_t i = 0; i < registersCount; i++) {
-			if (i > 0) {
-				free(registers[i]->sequence);
-			}
+			free(registers[i]->sequence);
 			free(registers[i]);
 		}
 		free(registers);

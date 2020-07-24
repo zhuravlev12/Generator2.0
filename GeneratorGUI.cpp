@@ -174,7 +174,7 @@ static void readSeedFromInput() {
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    uint32_t minimum, maximum;
+    uint32_t minimum, maximum, temp;
     double number;
     std::wostringstream wcharStream;
     BOOL result;
@@ -296,11 +296,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 minimum = GetDlgItemInt(hWnd, IDC_EDIT2, &result, FALSE);
                 maximum = GetDlgItemInt(hWnd, IDC_EDIT3, nullptr, FALSE);
                 if (result == 0) {
-                    minimum = UINT32_MAX;
+                    if (GetWindowTextLength(GetDlgItem(hWnd, IDC_EDIT2)) > 0) {
+                        minimum = UINT32_MAX;
+                    } else {
+                        minimum = 0;
+                    }
                     SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
                 }
                 if (minimum > maximum) {
-                    SetDlgItemInt(hWnd, IDC_EDIT2, maximum, FALSE);
+                    temp = minimum;
+                    minimum = maximum;
+                    maximum = temp;
+                    SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
+                    SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
                 }
                 if (minimum < 0) {
                     SetDlgItemInt(hWnd, IDC_EDIT2, 0, FALSE);
@@ -310,11 +318,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 minimum = GetDlgItemInt(hWnd, IDC_EDIT2, nullptr, FALSE);
                 maximum = GetDlgItemInt(hWnd, IDC_EDIT3, &result, FALSE);
                 if (result == 0) {
-                    maximum = UINT32_MAX;
+                    if (GetWindowTextLength(GetDlgItem(hWnd, IDC_EDIT3)) > 0) {
+                        maximum = UINT32_MAX;
+                    } else {
+                        maximum = 0;
+                    }
                     SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
                 }
-                if (maximum < minimum) {
-                    SetDlgItemInt(hWnd, IDC_EDIT3, minimum, FALSE);
+                if (minimum > maximum) {
+                    temp = minimum;
+                    minimum = maximum;
+                    maximum = temp;
+                    SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
+                    SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
                 }
                 if (maximum < 0) {
                     SetDlgItemInt(hWnd, IDC_EDIT3, 0, FALSE);
@@ -325,7 +341,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SetDlgItemInt(hWnd, IDC_EDIT5, 0, FALSE);
                 }
                 if (result == 0) {
-                    SetDlgItemInt(hWnd, IDC_EDIT5, UINT32_MAX, FALSE);
+                    if (GetWindowTextLength(GetDlgItem(hWnd, IDC_EDIT5)) > 0) {
+                        SetDlgItemInt(hWnd, IDC_EDIT5, UINT32_MAX, FALSE);
+                    }
+                    else {
+                        SetDlgItemInt(hWnd, IDC_EDIT5, 0, FALSE);
+                    }
                 }
             default:
                 break;
@@ -469,7 +490,13 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
                         SetDlgItemInt(hDlg, editBoxes[i], 64, FALSE);
                     }
                     if (result == 0) {
-                        SetDlgItemInt(hDlg, editBoxes[i], UINT32_MAX, FALSE);
+                        if (GetWindowTextLength(GetDlgItem(hWnd, editBoxes[i])) > 0) {
+                            SetDlgItemInt(hDlg, editBoxes[i], UINT32_MAX, FALSE);
+                        }
+                        else {
+                            SetDlgItemInt(hWnd, editBoxes[i], 0, FALSE);
+                        }
+                       
                     }
                     return (INT_PTR)TRUE;
                 }
@@ -515,7 +542,11 @@ INT_PTR CALLBACK SeedFromNumber(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             BOOL result;
             GetDlgItemInt(hDlg, IDC_SEED, &result, FALSE);
             if (result == 0) {
-                SetDlgItemInt(hDlg, IDC_SEED, UINT32_MAX, FALSE);
+                if (GetWindowTextLength(GetDlgItem(hDlg, IDC_SEED)) > 0) {
+                    SetDlgItemInt(hDlg, IDC_SEED, UINT32_MAX, FALSE);
+                } else {
+                    SetDlgItemInt(hDlg, IDC_SEED, 0, FALSE);
+                }
             }
         }
         break;

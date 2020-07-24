@@ -34,7 +34,7 @@
 #define IDC_RADIO4                      1012
 #define IDC_SPIN1                       1016
 #define IDC_MFCEDITBROWSE1              1017
-#define IDC_BUTTON3                     1018
+#define IDC_SEED                        1020
 #define ID_32771                        32771
 #define ID_32772                        32772
 #define ID_32773                        32773
@@ -60,7 +60,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32787
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

@@ -177,6 +177,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     uint32_t minimum, maximum;
     double number;
     std::wostringstream wcharStream;
+    BOOL result;
     switch (message)
     {
     case WM_COMMAND:
@@ -292,8 +293,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 break;
             case IDC_EDIT2:
-                minimum = GetDlgItemInt(hWnd, IDC_EDIT2, nullptr, FALSE);
+                minimum = GetDlgItemInt(hWnd, IDC_EDIT2, &result, FALSE);
                 maximum = GetDlgItemInt(hWnd, IDC_EDIT3, nullptr, FALSE);
+                if (result == 0) {
+                    minimum = UINT32_MAX;
+                    SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
+                }
                 if (minimum > maximum) {
                     SetDlgItemInt(hWnd, IDC_EDIT2, maximum, FALSE);
                 }
@@ -303,7 +308,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDC_EDIT3:
                 minimum = GetDlgItemInt(hWnd, IDC_EDIT2, nullptr, FALSE);
-                maximum = GetDlgItemInt(hWnd, IDC_EDIT3, nullptr, FALSE);
+                maximum = GetDlgItemInt(hWnd, IDC_EDIT3, &result, FALSE);
+                if (result == 0) {
+                    maximum = UINT32_MAX;
+                    SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
+                }
                 if (maximum < minimum) {
                     SetDlgItemInt(hWnd, IDC_EDIT3, minimum, FALSE);
                 }
@@ -311,14 +320,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SetDlgItemInt(hWnd, IDC_EDIT3, 0, FALSE);
                 }
                 break;
-            case IDC_EDIT4:
-                if (GetDlgItemInt(hWnd, IDC_EDIT4, nullptr, FALSE) < 0) {
-                    SetDlgItemInt(hWnd, IDC_EDIT4, 0, FALSE);
-                }
-                break;
             case IDC_EDIT5:
-                if (GetDlgItemInt(hWnd, IDC_EDIT5, nullptr, FALSE) < 0) {
+                if (GetDlgItemInt(hWnd, IDC_EDIT5, &result, FALSE) < 0) {
                     SetDlgItemInt(hWnd, IDC_EDIT5, 0, FALSE);
+                }
+                if (result == 0) {
+                    SetDlgItemInt(hWnd, IDC_EDIT5, UINT32_MAX, FALSE);
                 }
             default:
                 break;
@@ -359,33 +366,35 @@ UINT editBoxes[] = {IDC_EDIT1, IDC_EDIT2, IDC_EDIT3, IDC_EDIT4, IDC_EDIT6, IDC_E
 
 INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    BOOL result;
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
     case WM_NOTIFY:
         if (LOWORD(wParam) == IDC_SPIN1) {
             int iDelta = ((NMUPDOWN*)lParam)->iDelta;
-            if (iDelta > 0) {
-                number_of_steps++;
-            } else if (iDelta < 0) {
-                number_of_steps--;
+            uint32_t number = GetDlgItemInt(hDlg, IDC_EDIT9, nullptr, FALSE);
+            if (iDelta < 0) {
+                number++;
+            } else if (iDelta > 0) {
+                number--;
             }
-            if (number_of_steps > 7) {
-                number_of_steps = 7;
+            if (number > 7) {
+                number = 7;
             }
-            else if (number_of_steps < 1) {
-                number_of_steps = 1;                
+            else if (number < 1) {
+                number = 1;                
             }
-            SetDlgItemInt(hDlg, IDC_EDIT9, number_of_steps, FALSE);
-            for (int i = 0; i < number_of_steps; i++) {
+            SetDlgItemInt(hDlg, IDC_EDIT9, number, FALSE);
+            for (int i = 0; i < number; i++) {
                 HWND editBox = GetDlgItem(hDlg, editBoxes[i]);
-                if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 1) {
+                if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 32) {
                     SetDlgItemInt(hDlg, editBoxes[i], 32, FALSE);
                 }
                 EnableWindow(editBox, TRUE);
             }
             
-            for (int i = number_of_steps; i < 7; i++) {
+            for (int i = number; i < 7; i++) {
                 HWND editBox = GetDlgItem(hDlg, editBoxes[i]);
                 EnableWindow(editBox, FALSE);
             }
@@ -432,31 +441,35 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         } else if (LOWORD(wParam) == IDC_EDIT9) {
-            number_of_steps = GetDlgItemInt(hDlg, IDC_EDIT9, nullptr, FALSE);
-            if (number_of_steps > 7) {
-                number_of_steps = 7;
-                SetDlgItemInt(hDlg, IDC_EDIT9, number_of_steps, FALSE);
-            } else if (number_of_steps < 1) {
-                number_of_steps = 1;
-                SetDlgItemInt(hDlg, IDC_EDIT9, number_of_steps, FALSE);
+            uint32_t number = GetDlgItemInt(hDlg, IDC_EDIT9, nullptr, FALSE);
+            if (number > 7) {
+                number = 7;
+                SetDlgItemInt(hDlg, IDC_EDIT9, number, FALSE);
+            } else if (number < 1) {
+                number = 1;
+                SetDlgItemInt(hDlg, IDC_EDIT9, number, FALSE);
             }
-            for (int i = 0; i < number_of_steps; i++) {
+            for (int i = 0; i < number; i++) {
                 HWND editBox = GetDlgItem(hDlg, editBoxes[i]);
-                if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 1) {
+                if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 32) {
                     SetDlgItemInt(hDlg, editBoxes[i], 32, FALSE);
                 }
                 EnableWindow(editBox, TRUE);
             }
-            for (int i = number_of_steps; i < 7; i++) {
+            for (int i = number; i < 7; i++) {
                 HWND editBox = GetDlgItem(hDlg, editBoxes[i]);
                 EnableWindow(editBox, FALSE);
             }
             return (INT_PTR)TRUE;
         } else {
-            for (int i = 0; i < number_of_steps; i++) {
+            uint32_t number = GetDlgItemInt(hDlg, IDC_EDIT9, nullptr, FALSE);
+            for (int i = 0; i < number; i++) {
                 if (LOWORD(wParam) == editBoxes[i]) {
-                    if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 1) {
+                    if (GetDlgItemInt(hDlg, editBoxes[i], &result, FALSE) < 32) {
                         SetDlgItemInt(hDlg, editBoxes[i], 32, FALSE);
+                    }
+                    if (result == 0) {
+                        SetDlgItemInt(hDlg, editBoxes[i], UINT32_MAX, FALSE);
                     }
                     return (INT_PTR)TRUE;
                 }
@@ -469,18 +482,19 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 
 INT_PTR CALLBACK SeedFromNumber(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
-    case WM_INITDIALOG:
+    case WM_INITDIALOG: {
+        BOOL result = SetDlgItemInt(hDlg, IDC_SEED, 0, FALSE);
         return (INT_PTR)TRUE;
+    }
 
     case WM_COMMAND:
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
         {
             if (LOWORD(wParam) == IDOK) {
-                uint32_t seed_number = GetDlgItemInt(hWnd, IDC_EDIT1, nullptr, FALSE);
-                if (seed_number >= 0) {
+                uint32_t seed_number = GetDlgItemInt(hDlg, IDC_SEED, nullptr, FALSE);
+                if (seed_number > 0) {
                     if (input != NULL) {
                         fclose(input);
                         input = NULL;
@@ -497,6 +511,13 @@ INT_PTR CALLBACK SeedFromNumber(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             }
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
+        }
+        else if (LOWORD(wParam) == IDC_SEED) {
+            BOOL result;
+            GetDlgItemInt(hDlg, IDC_SEED, &result, FALSE);
+            if (result == 0) {
+                SetDlgItemInt(hDlg, IDC_SEED, UINT32_MAX, FALSE);
+            }
         }
         break;
     }

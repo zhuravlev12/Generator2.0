@@ -4,7 +4,7 @@
 #include <math.h>
 #include "MyGenerator.h"
 
-static MyRegisterState ** registers = NULL;
+static MyRegisterState** registers = NULL;
 static uint32_t registersCount = 0;
 
 static unsigned char default_rand() {
@@ -56,17 +56,21 @@ static uint32_t generateMy(uint32_t* input, uint32_t number_of_blocks, unsigned 
 	if (is_last_block) {
 		if (current_offset == 0) {
 			last_byte = (input[current_block] << difference_between_last_block) + (input[0] >> bits_in_last_block);
-		} else {
+		}
+		else {
 			last_byte = (input[current_block] << current_offset_in_last_block) + (input[0] >> current_offset_after_last_block);
 		}
-	} else {
+	}
+	else {
 		if (current_offset == 0) {
 			last_byte = input[current_block];
-		} else {
+		}
+		else {
 			last_byte = input[current_block] << current_offset;
 			if (is_pre_last_block) {
 				last_byte += input[current_block + 1] >> current_offset_after_last_block;
-			} else {
+			}
+			else {
 				last_byte += input[current_block + 1] >> current_offset_in_next_block;
 			}
 		}
@@ -83,20 +87,23 @@ static uint32_t generateMy(uint32_t* input, uint32_t number_of_blocks, unsigned 
 	}
 	if (is_last_block) {
 		input[current_block] = ((input[current_block] & (UINT32_MAX << current_offset_after_last_block)) |
-			(result >> current_offset_in_last_block)) &
+			(result >> current_offset_in_last_block))&
 			(UINT32_MAX >> difference_between_last_block);
 		input[0] = (input[0] & (UINT32_MAX >> current_offset_in_last_block)) |
 			(result << current_offset_after_last_block);
-	} else {
+	}
+	else {
 		if (current_offset == 0) {
 			input[current_block] = result;
-		} else {
+		}
+		else {
 			input[current_block] = (input[current_block] & (UINT32_MAX << current_offset_in_next_block)) |
 				(result >> current_offset);
 			if (is_pre_last_block) {
 				input[current_block + 1] = (input[current_block + 1] & (UINT32_MAX >> current_offset_in_last_block)) |
 					(result << current_offset_after_last_block);
-			} else {
+			}
+			else {
 				input[current_block + 1] = (input[current_block + 1] & (UINT32_MAX >> current_offset)) |
 					(result << current_offset_in_next_block);
 			}
@@ -119,7 +126,8 @@ static void init_tables() {
 			if (odd == 0) {
 				bytes_by_byte_even[byte] = new_byte;
 				change_odd_by_byte[byte] = current_odd;
-			} else {
+			}
+			else {
 				bytes_by_byte_odd[byte] = new_byte;
 			}
 		}
@@ -130,7 +138,7 @@ void setAdditionalRandom(unsigned char (*random)()) {
 	add_random = random;
 }
 
-void mySRandFromStates(uint32_t paramsLength, MyRegisterState ** states) {
+void mySRandFromStates(uint32_t paramsLength, MyRegisterState** states) {
 	if (registers != NULL) {
 		for (uint32_t i = 0; i < registersCount; i++) {
 			free(registers[i]->sequence);
@@ -152,8 +160,8 @@ void mySRandFromStates(uint32_t paramsLength, MyRegisterState ** states) {
 void mySRandFromSeed(uint32_t paramsLength, uint32_t* params, uint32_t* seed) {
 	if (registers == NULL) {
 		init_tables();
-		srand(0);
 	}
+	srand(0);
 	MyRegisterState** states = (MyRegisterState**)malloc(paramsLength * sizeof(MyRegisterState*));
 	for (uint32_t i = 0; i < paramsLength; i++) {
 		states[i] = (MyRegisterState*)malloc(sizeof(MyRegisterState));
@@ -233,7 +241,8 @@ uint32_t myRand() {
 			reg->period_random, reg->last_bit, &(reg->current_odd));
 		if (reg->current_block != reg->number_of_blocks - 1) {
 			reg->current_block++;
-		} else {
+		}
+		else {
 			reg->current_block = 0;
 		}
 		if (reg->current_block == 0) {

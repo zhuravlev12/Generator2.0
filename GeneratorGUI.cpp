@@ -484,10 +484,9 @@ INT_PTR CALLBACK SeedFromNumber(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 {
     switch (message)
     {
-    case WM_INITDIALOG: {
-        BOOL result = SetDlgItemInt(hDlg, IDC_SEED, 0, FALSE);
+    case WM_INITDIALOG:
+        SetDlgItemInt(hDlg, IDC_SEED, 0, FALSE);
         return (INT_PTR)TRUE;
-    }
 
     case WM_COMMAND:
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)

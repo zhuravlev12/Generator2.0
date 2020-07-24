@@ -97,9 +97,7 @@ static uint32_t generateMy(uint32_t* input, uint32_t number_of_blocks, unsigned 
 		}
 	}
 	result = getResult(last_byte, current_odd);
-	last_bit += bits;
 	if (last_bit >= period_random) {
-		last_bit -= period_random;
 		unsigned char old_bit = result & 1;
 		unsigned char new_bit = (*add_random)();
 		*current_odd ^= new_bit ^ old_bit;
@@ -314,10 +312,10 @@ uint32_t myRand() {
 				reg->current_offset -= bits;
 			}
 		}
-		reg->last_bit += bits;
 		if (reg->last_bit >= reg->period_random) {
 			reg->last_bit -= reg->period_random;
 		}
+		reg->last_bit += bits;
 	}
 	return result;
 }

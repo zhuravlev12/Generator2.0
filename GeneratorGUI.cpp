@@ -305,10 +305,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (result == 0) {
                     if (GetWindowTextLength(GetDlgItem(hWnd, IDC_EDIT2)) > 0) {
                         minimum = UINT32_MAX;
+                        SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
                     } else {
                         minimum = 0;
                     }
-                    SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
                 }
                 if (minimum < 0) {
                     SetDlgItemInt(hWnd, IDC_EDIT2, 0, FALSE);
@@ -320,10 +320,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (result == 0) {
                     if (GetWindowTextLength(GetDlgItem(hWnd, IDC_EDIT3)) > 0) {
                         maximum = UINT32_MAX;
+                        SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
                     } else {
                         maximum = 0;
                     }
-                    SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
                 }
                 if (maximum < 0) {
                     SetDlgItemInt(hWnd, IDC_EDIT3, 0, FALSE);
@@ -336,9 +336,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (result == 0) {
                     if (GetWindowTextLength(GetDlgItem(hWnd, IDC_EDIT5)) > 0) {
                         SetDlgItemInt(hWnd, IDC_EDIT5, UINT32_MAX, FALSE);
-                    }
-                    else {
-                        SetDlgItemInt(hWnd, IDC_EDIT5, 0, FALSE);
                     }
                 }
             default:
@@ -486,10 +483,6 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
                         if (GetWindowTextLength(GetDlgItem(hWnd, editBoxes[i])) > 0) {
                             SetDlgItemInt(hDlg, editBoxes[i], UINT32_MAX, FALSE);
                         }
-                        else {
-                            SetDlgItemInt(hWnd, editBoxes[i], 0, FALSE);
-                        }
-                       
                     }
                     return (INT_PTR)TRUE;
                 }
@@ -537,8 +530,6 @@ INT_PTR CALLBACK SeedFromNumber(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             if (result == 0) {
                 if (GetWindowTextLength(GetDlgItem(hDlg, IDC_SEED)) > 0) {
                     SetDlgItemInt(hDlg, IDC_SEED, UINT32_MAX, FALSE);
-                } else {
-                    SetDlgItemInt(hDlg, IDC_SEED, 0, FALSE);
                 }
             }
         }

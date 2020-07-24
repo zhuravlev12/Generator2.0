@@ -388,8 +388,8 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
             SetDlgItemInt(hDlg, IDC_EDIT9, number, FALSE);
             for (int i = 0; i < number; i++) {
                 HWND editBox = GetDlgItem(hDlg, editBoxes[i]);
-                if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 32) {
-                    SetDlgItemInt(hDlg, editBoxes[i], 32, FALSE);
+                if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 64) {
+                    SetDlgItemInt(hDlg, editBoxes[i], 64, FALSE);
                 }
                 EnableWindow(editBox, TRUE);
             }
@@ -451,8 +451,8 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
             }
             for (int i = 0; i < number; i++) {
                 HWND editBox = GetDlgItem(hDlg, editBoxes[i]);
-                if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 32) {
-                    SetDlgItemInt(hDlg, editBoxes[i], 32, FALSE);
+                if (GetDlgItemInt(hDlg, editBoxes[i], nullptr, FALSE) < 64) {
+                    SetDlgItemInt(hDlg, editBoxes[i], 64, FALSE);
                 }
                 EnableWindow(editBox, TRUE);
             }
@@ -465,8 +465,8 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
             uint32_t number = GetDlgItemInt(hDlg, IDC_EDIT9, nullptr, FALSE);
             for (int i = 0; i < number; i++) {
                 if (LOWORD(wParam) == editBoxes[i]) {
-                    if (GetDlgItemInt(hDlg, editBoxes[i], &result, FALSE) < 32) {
-                        SetDlgItemInt(hDlg, editBoxes[i], 32, FALSE);
+                    if (GetDlgItemInt(hDlg, editBoxes[i], &result, FALSE) < 64) {
+                        SetDlgItemInt(hDlg, editBoxes[i], 64, FALSE);
                     }
                     if (result == 0) {
                         SetDlgItemInt(hDlg, editBoxes[i], UINT32_MAX, FALSE);

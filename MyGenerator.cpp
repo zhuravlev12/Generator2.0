@@ -55,10 +55,23 @@ static uint32_t generateMy(uint32_t* input, uint32_t number_of_blocks, unsigned 
 	unsigned char current_offset_in_next_block = bits - current_offset;
 	if (is_last_block) {
 		if (current_offset == 0) {
-			last_byte = (input[current_block] << difference_between_last_block) + (input[0] >> bits_in_last_block);
+			if (bits_in_last_block != bits) {
+				last_byte = (input[current_block] << difference_between_last_block) | (input[0] >> bits_in_last_block);
+			}
+			else {
+				last_byte = input[current_block];
+			}
 		}
 		else {
-			last_byte = (input[current_block] << current_offset_in_last_block) + (input[0] >> current_offset_after_last_block);
+			if (current_offset_after_last_block > 0) {
+				last_byte = (input[current_block] << current_offset_in_last_block) | (input[0] >> current_offset_after_last_block);
+			}
+			else if (current_offset_after_last_block == 0) {
+				last_byte = input[0];
+			}
+			else {
+				last_byte = (input[0] << (current_offset_in_last_block - bits)) | (input[1] >> (current_offset_after_last_block + bits)); // ?
+			}
 		}
 	}
 	else {
@@ -68,44 +81,94 @@ static uint32_t generateMy(uint32_t* input, uint32_t number_of_blocks, unsigned 
 		else {
 			last_byte = input[current_block] << current_offset;
 			if (is_pre_last_block) {
-				last_byte += input[current_block + 1] >> current_offset_after_last_block;
+				if (current_offset_after_last_block > 0) {
+					last_byte |= input[current_block + 1] >> current_offset_after_last_block;
+				}
+				else if (current_offset_after_last_block == 0) {
+					last_byte |= input[current_block + 1];
+				}
+				else {
+					last_byte |= (input[current_block + 1] << (current_offset - bits_in_last_block)) | (input[0] >> (bits - current_offset + bits_in_last_block)); // ?
+				}
 			}
 			else {
-				last_byte += input[current_block + 1] >> current_offset_in_next_block;
+				last_byte |= input[current_block + 1] >> current_offset_in_next_block;
 			}
 		}
 	}
 	result = getResult(last_byte, current_odd);
 	last_bit += bits;
-	while (last_bit >= period_random) {
+	if (last_bit >= period_random) {
 		last_bit -= period_random;
-		unsigned char old_bit = (result >> last_bit) & 1;
+		unsigned char old_bit = result & 1;
 		unsigned char new_bit = (*add_random)();
 		*current_odd ^= new_bit ^ old_bit;
-		result &= UINT32_MAX - (1 << last_bit);
-		result |= new_bit << last_bit;
+		result &= UINT32_MAX - 1;
+		result |= new_bit;
 	}
 	if (is_last_block) {
-		input[current_block] = ((input[current_block] & (UINT32_MAX << current_offset_after_last_block)) |
-			(result >> current_offset_in_last_block))&
-			(UINT32_MAX >> difference_between_last_block);
-		input[0] = (input[0] & (UINT32_MAX >> current_offset_in_last_block)) |
-			(result << current_offset_after_last_block);
+		if (bits == bits_in_last_block) {
+			if (current_offset == 0) {
+				input[current_offset] = result;
+			}
+			else {
+				input[current_block] = (input[current_block] & (UINT32_MAX << current_offset_in_next_block)) | (result >> current_offset);
+				input[0] = (input[0] & (UINT32_MAX >> current_offset)) | (result << current_offset_in_next_block);
+			}
+		}
+		else {
+			if (current_offset_after_last_block > 0) {
+				uint32_t input_current_block = input[current_block];
+				uint32_t input_0 = input[0];
+				input_current_block &= UINT32_MAX << current_offset_after_last_block;
+				input_current_block |= result >> current_offset_in_last_block;
+				input_current_block &= UINT32_MAX >> difference_between_last_block;
+				input_0 &= UINT32_MAX >> current_offset_in_last_block;
+				input_0 |= result << current_offset_after_last_block;
+				input[0] = input_0;
+				input[current_block] = input_current_block;
+			}
+			else if (current_offset_after_last_block == 0) {
+				input[0] = result;
+			}
+			else {
+				uint32_t input_0 = input[0];
+				uint32_t input_1 = input[1];
+				input_0 &= UINT32_MAX << (current_offset_after_last_block + bits);
+				input_0 |= result >> (current_offset_in_last_block - bits);
+				input_1 &= UINT32_MAX >> (-current_offset_after_last_block);
+				input_1 |= result << (bits + bits - current_offset_in_last_block); // ?
+				input[0] = input_0;
+				input[1] = input_1;
+			}
+		}
 	}
 	else {
 		if (current_offset == 0) {
 			input[current_block] = result;
 		}
 		else {
-			input[current_block] = (input[current_block] & (UINT32_MAX << current_offset_in_next_block)) |
-				(result >> current_offset);
+			input[current_block] = (input[current_block] & (UINT32_MAX << current_offset_in_next_block)) | (result >> current_offset);
 			if (is_pre_last_block) {
-				input[current_block + 1] = (input[current_block + 1] & (UINT32_MAX >> current_offset_in_last_block)) |
-					(result << current_offset_after_last_block);
+				if (current_offset_after_last_block > 0) {
+					input[current_block + 1] = (input[current_block + 1] & (UINT32_MAX >> current_offset_in_last_block)) | (result << current_offset_after_last_block);
+				}
+				else if (current_offset_after_last_block == 0) {
+					input[current_block + 1] = result & (UINT32_MAX >> difference_between_last_block);
+				}
+				else {
+					uint32_t input_last_block = input[current_block + 1];
+					uint32_t input_0 = input[0];
+					input_last_block &= UINT32_MAX << (current_offset_after_last_block + bits);
+					input_last_block |= (result >> (current_offset_in_last_block - bits))& (UINT32_MAX >> (-current_offset_after_last_block));
+					input_0 &= UINT32_MAX >> (-current_offset_after_last_block);
+					input_0 |= result << (bits + bits - current_offset_in_last_block); // ?
+					input[0] = input_0;
+					input[current_block + 1] = input_last_block;
+				}
 			}
 			else {
-				input[current_block + 1] = (input[current_block + 1] & (UINT32_MAX >> current_offset)) |
-					(result << current_offset_in_next_block);
+				input[current_block + 1] = (input[current_block + 1] & (UINT32_MAX >> current_offset)) | (result << current_offset_in_next_block);
 			}
 		}
 	}

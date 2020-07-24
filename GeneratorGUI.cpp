@@ -284,6 +284,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 number = myRand();
                 minimum = GetDlgItemInt(hWnd, IDC_EDIT2, nullptr, FALSE);
                 maximum = GetDlgItemInt(hWnd, IDC_EDIT3, nullptr, FALSE);
+                if (minimum > maximum) {
+                    temp = minimum;
+                    minimum = maximum;
+                    maximum = temp;
+                    SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
+                    SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
+                }
                 number = number / (MAXUINT32) * (maximum - minimum) + minimum;
                 if (is_whole) {
                     SetDlgItemInt(hWnd, IDC_EDIT4, round(number), FALSE);
@@ -303,13 +310,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
                 }
-                if (minimum > maximum) {
-                    temp = minimum;
-                    minimum = maximum;
-                    maximum = temp;
-                    SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
-                    SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
-                }
                 if (minimum < 0) {
                     SetDlgItemInt(hWnd, IDC_EDIT2, 0, FALSE);
                 }
@@ -323,13 +323,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     } else {
                         maximum = 0;
                     }
-                    SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
-                }
-                if (minimum > maximum) {
-                    temp = minimum;
-                    minimum = maximum;
-                    maximum = temp;
-                    SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
                     SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
                 }
                 if (maximum < 0) {

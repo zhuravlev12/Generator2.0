@@ -199,7 +199,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 IFileDialog* inputFile = NULL;
                 CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&inputFile));
                 inputFile->Show(NULL);
-                IShellItem* fileResult;
+                IShellItem* fileResult = (IShellItem*)-1;
                 inputFile->GetResult(&fileResult);
                 if (!SUCCEEDED(fileResult)) {
                     MessageBox(hWnd, TEXT("Невозможно открыть файл"), TEXT("Ошибка"), MB_OK | MB_ICONEXCLAMATION);
@@ -233,7 +233,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 IFileDialog* outputFile = NULL;
                 CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&outputFile));
                 outputFile->Show(NULL);
-                IShellItem* fileResult;
+                IShellItem* fileResult = (IShellItem*)-1;
                 outputFile->GetResult(&fileResult);
                 if (!SUCCEEDED(fileResult)) {
                     MessageBox(hWnd, TEXT("Невозможно открыть файл"), TEXT("Ошибка"), MB_OK | MB_ICONEXCLAMATION);
@@ -487,11 +487,10 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
             for (int i = 0; i < number; i++) {
                 if (LOWORD(wParam) == editBoxes[i]) {
                     if (GetDlgItemInt(hDlg, editBoxes[i], &result, FALSE) < 64) {
-                        SetDlgItemInt(hDlg, editBoxes[i], 64, FALSE);
-                    }
-                    if (result == 0) {
-                        if (GetWindowTextLength(GetDlgItem(hWnd, editBoxes[i])) > 0) {
+                        if (result == 0 && GetWindowTextLength(GetDlgItem(hDlg, editBoxes[i])) > 0) {
                             SetDlgItemInt(hDlg, editBoxes[i], UINT32_MAX, FALSE);
+                        } else {
+                            SetDlgItemInt(hDlg, editBoxes[i], 64, FALSE);
                         }
                     }
                     return (INT_PTR)TRUE;

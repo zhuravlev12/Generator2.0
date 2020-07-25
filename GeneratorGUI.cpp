@@ -33,7 +33,7 @@ FILE* output = NULL;
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    Parameters(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    SeedFromMouse(HWND, UINT, WPARAM, LPARAM);
@@ -103,7 +103,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbSize = sizeof(WNDCLASSEX);
 
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
+    wcex.lpfnWndProc    = nullptr;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = DLGWINDOWEXTRA;
     wcex.hInstance      = hInstance;
@@ -172,7 +172,7 @@ static void readSeedFromInput() {
 //  WM_DESTROY  - отправить сообщение о выходе и вернуться
 //
 //
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     uint32_t minimum, maximum, temp;
     double number;

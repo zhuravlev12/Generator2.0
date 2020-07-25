@@ -247,6 +247,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 output = fopen(c, "wb");
                 if (output != NULL) {
                     uint32_t length = GetDlgItemInt(hWnd, IDC_EDIT5, nullptr, FALSE);
+                    if (length == 0) {
+                        SetDlgItemInt(hWnd, IDC_EDIT5, 0, FALSE);
+                    }
                     for (uint32_t i = 0; i < length; i += sizeof(uint32_t)) {
                         uint32_t random = myRand();
                         if (!print_bits) {
@@ -290,6 +293,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     maximum = temp;
                     SetDlgItemInt(hWnd, IDC_EDIT2, minimum, FALSE);
                     SetDlgItemInt(hWnd, IDC_EDIT3, maximum, FALSE);
+                } else {
+                    if (minimum == 0) {
+                        SetDlgItemInt(hWnd, IDC_EDIT2, 0, FALSE);
+                    }
+                    if (maximum == 0) {
+                        SetDlgItemInt(hWnd, IDC_EDIT3, 0, FALSE);
+                    }
                 }
                 number = number / (MAXUINT32) * (maximum - minimum) + minimum;
                 if (is_whole) {

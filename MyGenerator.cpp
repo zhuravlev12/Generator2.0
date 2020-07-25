@@ -298,6 +298,7 @@ uint32_t myRand() {
 	uint32_t result = 0;
 	for (uint32_t i = 0; i < registersCount; i++) {
 		MyRegisterState* reg = registers[i];
+		reg->last_bit += bits;
 		result ^= generateMy(reg->sequence, reg->number_of_blocks, reg->bits_in_last_block, reg->current_block, reg->current_offset,
 			reg->period_random, reg->last_bit, &(reg->current_odd));
 		if (reg->current_block != reg->number_of_blocks - 1) {
@@ -315,7 +316,6 @@ uint32_t myRand() {
 		if (reg->last_bit >= reg->period_random) {
 			reg->last_bit -= reg->period_random;
 		}
-		reg->last_bit += bits;
 	}
 	return result;
 }

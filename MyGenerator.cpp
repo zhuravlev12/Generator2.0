@@ -31,145 +31,58 @@ static uint32_t getResult(uint32_t last_bytes, unsigned char* current_odd) {
 	uint32_t result = 0;
 	unsigned char new_odd = *current_odd;
 	uint16_t cur_byte = last_bytes >> 16;
-	uint16_t byte1 = getByte(cur_byte, new_odd);
+	result |= getByte(cur_byte, new_odd);
 	new_odd ^= change_odd_by_byte[cur_byte];
-	result |= byte1;
 	result <<= half_bits;
 	cur_byte = last_bytes;
-	uint16_t byte2 = getByte(cur_byte, new_odd);
+	result |= getByte(cur_byte, new_odd);
 	new_odd ^= change_odd_by_byte[cur_byte];
-	result |= byte2;
 	*current_odd = new_odd;
 	return result;
 }
 
-static uint32_t generateMy(uint32_t* input, uint32_t number_of_blocks, unsigned char bits_in_last_block, uint32_t current_block,
+static uint32_t getFrom(unsigned char* input, int32_t bits_before_end, uint32_t current_block, unsigned char current_offset) {
+	if (bits_before_end >= 0) {
+		return *((uint64_t*)(&(input[current_block]))) >> (bits - current_offset);
+	}
+	return *((uint32_t*)(&(input[current_block]))) << -bits_before_end | *((uint32_t*)(&(input[0]))) >> (bits + bits_before_end);
+}
+
+static void setTo(unsigned char* input, int32_t bits_before_end, uint32_t current_block, unsigned char current_offset, uint32_t result) {
+	if (bits_before_end >= 0) {
+		unsigned char offset = (bits - current_offset);
+		uint64_t word = *((uint64_t*)(&(input[current_block])));
+		word &= UINT64_MAX ^ (((uint64_t)UINT32_MAX) << offset);
+		word |= ((uint64_t)result) << offset;
+		*((uint64_t*)(&(input[current_block]))) = word;
+		return;
+	}
+	unsigned char begin_offset = bits + bits_before_end;
+	unsigned char end_offset = -bits_before_end;
+	uint32_t begin_word = *((uint32_t*)(&(input[0])));
+	begin_word &= UINT32_MAX >> end_offset;
+	begin_word |= result << begin_offset;
+	*((uint32_t*)(&(input[0]))) = begin_word;
+	uint32_t end_word = *((uint32_t*)(&(input[current_block])));
+	end_word &= UINT32_MAX << begin_offset;
+	end_word |= result >> end_offset;
+	*((uint32_t*)(&(input[current_block]))) = end_word;
+}
+
+static uint32_t generateMy(unsigned char* input, uint32_t number_of_blocks, unsigned char bits_in_last_block, uint32_t current_block,
 	unsigned char current_offset, uint32_t period_random, uint32_t last_bit, unsigned char* current_odd) {
-	uint32_t result;
-	uint32_t last_byte;
-	unsigned char is_last_block = current_block == (number_of_blocks - 1);
-	unsigned char is_pre_last_block = current_block == (number_of_blocks - 2);
-	unsigned char difference_between_last_block = bits - bits_in_last_block;
-	signed char current_offset_after_last_block = bits_in_last_block - current_offset;
-	unsigned char current_offset_in_last_block = bits - current_offset_after_last_block;
-	unsigned char current_offset_in_next_block = bits - current_offset;
-	if (is_last_block) {
-		if (current_offset == 0) {
-			if (bits_in_last_block != bits) {
-				last_byte = (input[current_block] << difference_between_last_block) | (input[0] >> bits_in_last_block);
-			}
-			else {
-				last_byte = input[current_block];
-			}
-		}
-		else {
-			if (current_offset_after_last_block > 0) {
-				last_byte = (input[current_block] << current_offset_in_last_block) | (input[0] >> current_offset_after_last_block);
-			}
-			else if (current_offset_after_last_block == 0) {
-				last_byte = input[0];
-			}
-			else {
-				last_byte = (input[0] << (-current_offset_after_last_block)) | (input[1] >> (current_offset_after_last_block + bits)); // ?
-			}
-		}
-	}
-	else {
-		if (current_offset == 0) {
-			last_byte = input[current_block];
-		}
-		else {
-			last_byte = input[current_block] << current_offset;
-			if (is_pre_last_block) {
-				if (current_offset_after_last_block > 0) {
-					last_byte |= input[current_block + 1] >> current_offset_after_last_block;
-				}
-				else if (current_offset_after_last_block == 0) {
-					last_byte |= input[current_block + 1];
-				}
-				else {
-					last_byte |= (input[current_block + 1] << (-current_offset_after_last_block)) | (input[0] >> (current_offset_after_last_block + bits)); // ?
-				}
-			}
-			else {
-				last_byte |= input[current_block + 1] >> current_offset_in_next_block;
-			}
-		}
-	}
-	result = getResult(last_byte, current_odd);
+	int32_t bits_before_end = ((number_of_blocks - 1) * 8 + bits_in_last_block) - ((current_block + 4) * 8 + current_offset);
+	uint32_t result = getFrom(input, bits_before_end, current_block, current_offset);
 	if (last_bit >= period_random) {
-		unsigned char old_bit = result & 1;
+		uint32_t bit = bits - (last_bit - period_random) - 1;
+		unsigned char old_bit = (result >> bit) & 1;
 		unsigned char new_bit = (*add_random)();
 		*current_odd ^= new_bit ^ old_bit;
-		result &= UINT32_MAX - 1;
-		result |= new_bit;
+		result &= UINT32_MAX ^ (1 << bit);
+		result |= new_bit << bit;
 	}
-	if (is_last_block) {
-		if (bits == bits_in_last_block) {
-			if (current_offset == 0) {
-				input[current_offset] = result;
-			}
-			else {
-				input[current_block] = (input[current_block] & (UINT32_MAX << current_offset_in_next_block)) | (result >> current_offset);
-				input[0] = (input[0] & (UINT32_MAX >> current_offset)) | (result << current_offset_in_next_block);
-			}
-		}
-		else {
-			if (current_offset_after_last_block > 0) {
-				uint32_t input_current_block = input[current_block];
-				uint32_t input_0 = input[0];
-				input_current_block &= UINT32_MAX << current_offset_after_last_block;
-				input_current_block |= result >> current_offset_in_last_block;
-				input_current_block &= UINT32_MAX >> difference_between_last_block;
-				input_0 &= UINT32_MAX >> current_offset_in_last_block;
-				input_0 |= result << current_offset_after_last_block;
-				input[0] = input_0;
-				input[current_block] = input_current_block;
-			}
-			else if (current_offset_after_last_block == 0) {
-				input[0] = result;
-			}
-			else {
-				uint32_t input_0 = input[0];
-				uint32_t input_1 = input[1];
-				input_0 &= UINT32_MAX << (current_offset_after_last_block + bits);
-				input_0 |= result >> (-current_offset_after_last_block);
-				input_1 &= UINT32_MAX >> (-current_offset_after_last_block);
-				input_1 |= result << (current_offset_after_last_block + bits); // ?
-				input[0] = input_0;
-				input[1] = input_1;
-			}
-		}
-	}
-	else {
-		if (current_offset == 0) {
-			input[current_block] = result;
-		}
-		else {
-			input[current_block] = (input[current_block] & (UINT32_MAX << current_offset_in_next_block)) | (result >> current_offset);
-			if (is_pre_last_block) {
-				if (current_offset_after_last_block > 0) {
-					input[current_block + 1] = (input[current_block + 1] & (UINT32_MAX >> current_offset_in_last_block)) | (result << current_offset_after_last_block);
-				}
-				else if (current_offset_after_last_block == 0) {
-					input[current_block + 1] = result & (UINT32_MAX >> difference_between_last_block);
-				}
-				else {
-					uint32_t input_last_block = input[current_block + 1];
-					uint32_t input_0 = input[0];
-					input_last_block &= UINT32_MAX << (current_offset_after_last_block + bits);
-					input_last_block |= (result >> (-current_offset_after_last_block))& (UINT32_MAX >> (-current_offset_after_last_block));
-					input_0 &= UINT32_MAX >> (-current_offset_after_last_block);
-					input_0 |= result << (current_offset_after_last_block + bits); // ?
-					input[0] = input_0;
-					input[current_block + 1] = input_last_block;
-				}
-			}
-			else {
-				input[current_block + 1] = (input[current_block + 1] & (UINT32_MAX >> current_offset)) | (result << current_offset_in_next_block);
-			}
-		}
-	}
+	result = getResult(result, current_odd);
+	setTo(input, bits_before_end, current_block, current_offset, result);
 	return result;
 };
 
@@ -255,9 +168,9 @@ void mySRandFromSeed(uint32_t paramsLength, uint32_t* params, uint32_t* seed) {
 				prev_state->last_bit += bits;
 				prev_state->last_bit %= prev_state->period_random;
 			}
-			sequence[state->number_of_blocks - 1] >>= (bits - state->bits_in_last_block);
 		}
-		state->sequence = sequence;
+		sequence[state->number_of_blocks - 1] &= UINT32_MAX << (bits - state->bits_in_last_block);
+		state->sequence = (unsigned char*)sequence;
 		state->current_block = 0;
 		state->current_offset = 0;
 		state->last_bit = 0;
@@ -268,6 +181,8 @@ void mySRandFromSeed(uint32_t paramsLength, uint32_t* params, uint32_t* seed) {
 			}
 		}
 		state->current_odd = current_odd;
+		state->number_of_blocks = ceil(params[i] / 8.0);
+		state->bits_in_last_block = params[i] % 8;
 	}
 	mySRandFromStates(paramsLength, states);
 	free(states);
@@ -283,7 +198,7 @@ void mySRandFromParams(uint32_t paramsLength, uint32_t* params) {
 	for (uint32_t i = 0; i < number_of_blocks; i++) {
 		sequence[i] = rand();
 	}
-	sequence[number_of_blocks - 1] >>= (bits - bits_in_last_block);
+	sequence[number_of_blocks - 1] &= UINT32_MAX << (bits - bits_in_last_block);
 	mySRandFromSeed(paramsLength, params, sequence);
 }
 
@@ -301,16 +216,12 @@ uint32_t myRand() {
 		reg->last_bit += bits;
 		result ^= generateMy(reg->sequence, reg->number_of_blocks, reg->bits_in_last_block, reg->current_block, reg->current_offset,
 			reg->period_random, reg->last_bit, &(reg->current_odd));
-		if (reg->current_block != reg->number_of_blocks - 1) {
-			reg->current_block++;
-		}
-		else {
-			reg->current_block = 0;
-		}
-		if (reg->current_block == 0) {
-			reg->current_offset += bits - reg->bits_in_last_block;
-			if (reg->current_offset >= bits) {
-				reg->current_offset -= bits;
+		reg->current_block += sizeof(uint32_t);
+		if (reg->current_block >= reg->number_of_blocks) {
+			reg->current_block -= reg->number_of_blocks;
+			reg->current_offset += 8 - reg->bits_in_last_block;
+			if (reg->current_offset >= 8) {
+				reg->current_offset -= 8;
 			}
 		}
 		if (reg->last_bit >= reg->period_random) {

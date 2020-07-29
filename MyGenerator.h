@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 typedef struct {
-	uint32_t* sequence;
+	unsigned char* sequence;
 	uint32_t number_of_blocks;
 	unsigned char bits_in_last_block;
 	uint32_t current_block;

@@ -12,9 +12,14 @@ typedef struct {
 	unsigned char current_odd;
 } MyRegisterState;
 
-void setAdditionalRandom(unsigned char (*_random)());
-void mySRandFromStates(uint32_t paramsLength, MyRegisterState** states);
-void mySRandFromSeed(uint32_t paramsLength, uint32_t* params, uint32_t* seed);
-void mySRandFromParams(uint32_t paramsLength, uint32_t* params);
-void mySRand(uint32_t paramsLength);
-uint32_t myRand();
+typedef struct {
+	uint32_t params_length;
+	uint32_t* params;
+	uint32_t* seed;
+	MyRegisterState** states;
+	unsigned char (*additional_random)();
+	unsigned char iterative_mode;
+} MyGeneratorInitStruct;
+
+void mysrand(MyGeneratorInitStruct init);
+uint32_t myrand();

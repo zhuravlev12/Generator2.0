@@ -1,7 +1,4 @@
-﻿// GeneratorGUI.cpp : Определяет точку входа для приложения.
-//
-
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 #include "framework.h"
 #include "GeneratorGUI.h"
 #include "stdlib.h"
@@ -14,23 +11,21 @@
 
 #define MAX_LOADSTRING 100
 
-// Глобальные переменные:
-HINSTANCE hInst;                                // текущий экземпляр
+HINSTANCE hInst;
 HMENU hMenu;
 HWND hWnd;
-WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
-WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
+WCHAR szTitle[MAX_LOADSTRING];
+WCHAR szWindowClass[MAX_LOADSTRING];
 
 bool print_bits = false;
 bool is_whole = true;
-unsigned char number_of_steps = 7;
-uint32_t params[] = { 257, 2579, 25703, 257003, 2570011, 25700033, 257000011 };
+unsigned char number_of_steps = 4;
+uint32_t params[] = { 127, 8191, 524287, 33554393 };
 uint32_t seed_number;
 uint32_t* seed = NULL;
 FILE* input = NULL;
 FILE* output = NULL;
 
-// Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 INT_PTR CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -54,19 +49,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     for (uint32_t i = 0; i < bytes_count; i++) {
         seed[i] = seed_number;
     }
-    mySRandFromSeed(number_of_steps, params, seed);
+    MyGeneratorInitStruct* init = (MyGeneratorInitStruct*)calloc(1, sizeof(MyGeneratorInitStruct));
+    init->params_length = number_of_steps;
+    init->params = params;
+    init->seed = seed;
+    mysrand(*init);
+    free(init);
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Разместите код здесь.
-
-    // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDD_DIALOG1, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    // Выполнить инициализацию приложения:
     if (!InitInstance (hInstance, nCmdShow))
     {
         return FALSE;
@@ -76,7 +72,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-    // Цикл основного сообщения:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -91,11 +86,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 
-//
-//  ФУНКЦИЯ: MyRegisterClass()
-//
-//  ЦЕЛЬ: Регистрирует класс окна.
-//
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -117,19 +107,9 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW (&wcex);
 }
 
-//
-//   ФУНКЦИЯ: InitInstance(HINSTANCE, int)
-//
-//   ЦЕЛЬ: Сохраняет маркер экземпляра и создает главное окно
-//
-//   КОММЕНТАРИИ:
-//
-//        В этой функции маркер экземпляра сохраняется в глобальной переменной, а также
-//        создается и выводится главное окно программы.
-//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-    hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
+    hInst = hInstance;
     hWnd = CreateDialogW(hInst, MAKEINTRESOURCE(IDD_DIALOG1), nullptr, WndProc);
     hMenu = LoadMenuW(hInstance, MAKEINTRESOURCE(IDC_GENERATORGUI));
     SetMenu(hWnd, hMenu);
@@ -162,16 +142,6 @@ static void readSeedFromInput() {
     }
 }
 
-//
-//  ФУНКЦИЯ: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  ЦЕЛЬ: Обрабатывает сообщения в главном окне.
-//
-//  WM_COMMAND  - обработать меню приложения
-//  WM_PAINT    - Отрисовка главного окна
-//  WM_DESTROY  - отправить сообщение о выходе и вернуться
-//
-//
 INT_PTR CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     uint32_t minimum, maximum, temp;
@@ -251,7 +221,7 @@ INT_PTR CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         SetDlgItemInt(hWnd, IDC_EDIT5, 0, FALSE);
                     }
                     for (uint32_t i = 0; i < length; i += sizeof(uint32_t)) {
-                        uint32_t random = myRand();
+                        uint32_t random = myrand();
                         if (!print_bits) {
                             fwrite(&random, sizeof(uint32_t), 1, output);
                         } else {
@@ -284,7 +254,7 @@ INT_PTR CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 print_bits = false;
                 break;
             case IDC_BUTTON2:
-                number = myRand();
+                number = myrand();
                 minimum = GetDlgItemInt(hWnd, IDC_EDIT2, nullptr, FALSE);
                 maximum = GetDlgItemInt(hWnd, IDC_EDIT3, nullptr, FALSE);
                 if (minimum > maximum) {
@@ -363,7 +333,6 @@ INT_PTR CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-// Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
@@ -457,7 +426,12 @@ INT_PTR CALLBACK Parameters(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
                 } else {
                     seed = (uint32_t*)realloc(seed, ceil(params[0] / (8.0 * sizeof(uint32_t))));
                 }
-                mySRandFromSeed(number_of_steps, params, seed);
+                MyGeneratorInitStruct* init = (MyGeneratorInitStruct*)calloc(1, sizeof(MyGeneratorInitStruct));
+                init->params_length = number_of_steps;
+                init->params = params;
+                init->seed = seed;
+                mysrand(*init);
+                free(init);
             }
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
@@ -526,7 +500,12 @@ INT_PTR CALLBACK SeedFromNumber(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                     for (uint32_t i = 0; i < bytes_count; i++) {
                         seed[i] = seed_number;
                     }
-                    mySRandFromSeed(number_of_steps, params, seed);
+                    MyGeneratorInitStruct* init = (MyGeneratorInitStruct*)calloc(1, sizeof(MyGeneratorInitStruct));
+                    init->params_length = number_of_steps;
+                    init->params = params;
+                    init->seed = seed;
+                    mysrand(*init);
+                    free(init);
                     CheckMenuRadioItem(hMenu, IDM_SEED_FROM_FILE, IDM_SEED_FROM_MOUSE, IDM_SEED_FROM_NUMBER, 0);
                 }
             }
@@ -581,7 +560,12 @@ INT_PTR CALLBACK SeedFromMouse(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
         seed[index] = value;
         index++;
         if (index == bytes) {
-            mySRandFromSeed(number_of_steps, params, seed);
+            MyGeneratorInitStruct* init = (MyGeneratorInitStruct*)calloc(1, sizeof(MyGeneratorInitStruct));
+            init->params_length = number_of_steps;
+            init->params = params;
+            init->seed = seed;
+            mysrand(*init);
+            free(init);
             CheckMenuRadioItem(hMenu, IDM_SEED_FROM_FILE, IDM_SEED_FROM_MOUSE, IDM_SEED_FROM_MOUSE, 0);
             EndDialog(hDlg, LOWORD(wParam));
         }
